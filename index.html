@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clearance Tracker — UPI</title>
+<style>
+  /* ── original styles (unchanged) ── */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f6f9;color:#222;font-size:13px}
+  .header{background:#1a3a5c;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:12px}
+  .header h1{font-size:18px;font-weight:600;letter-spacing:.5px}
+  .header span{font-size:12px;opacity:.7;margin-left:auto}
+  .wrap{padding:16px 20px}
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .card{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .card-label{font-size:11px;color:#888;margin-bottom:4px}
+  .card-val{font-size:20px;font-weight:600;color:#1a3a5c}
+  .card-sub{font-size:11px;color:#aaa;margin-top:2px}
+  .mode-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .mode-badge{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:600}
+  .mode-view{background:#d4edda;color:#155724}
+  .mode-edit{background:#fff3cd;color:#856404}
+  .hint{font-size:11px;color:#888}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+  .toolbar select,.toolbar input{font-size:12px;padding:5px 9px;border-radius:6px;border:1px solid #d0d7e2;background:#fff;color:#222;height:32px}
+  .toolbar input{flex:1;min-width:150px}
+  .btn{font-size:12px;padding:5px 12px;border-radius:6px;border:1px solid #d0d7e2;background:#fff;color:#222;cursor:pointer;height:32px;display:inline-flex;align-items:center;gap:5px;font-weight:500}
+  .btn:hover{background:#f0f4fa}
+  .btn-edit{border-color:#1a3a5c;color:#1a3a5c}
+  .btn-add{border-color:#1a7a4a;color:#1a7a4a}
+  .tbl-wrap{overflow-x:auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+  th{background:#1a3a5c;color:#e8edf5;font-weight:500;padding:9px 8px;text-align:left;white-space:nowrap;font-size:11px}
+  th:first-child{border-radius:8px 0 0 0}
+  th:last-child{border-radius:0 8px 0 0}
+  td{padding:7px 8px;border-bottom:1px solid #eef1f6;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#f8fafd}
+  .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;white-space:nowrap}
+  .bank-QNB{background:#dbeafe;color:#1e40af}
+  .bank-NBE{background:#dcfce7;color:#166534}
+  .bank-ATJ{background:#fef9c3;color:#854d0e}
+  .s-W{background:#dbeafe;color:#1e40af}
+  .s-F{background:#fef3c7;color:#92400e}
+  .s-H{background:#ffe4e6;color:#9f1239}
+  .s-C{background:#d1fae5;color:#065f46}
+  .s-WO{background:#e0e7ff;color:#3730a3}
+  .s-B{background:#fef9c3;color:#854d0e}
+  .s-O{background:#dcfce7;color:#166534}
+  .s-SW{background:#fef9c3;color:#854d0e}
+  .s-SB{background:#f3e8ff;color:#6b21a8}
+  .s-SO{background:#fee2e2;color:#991b1b}
+  .s-N{background:#f1f5f9;color:#475569}
+  .c-RELAN{background:#e0f2fe;color:#0369a1}
+  td:nth-child(12){width:65px;min-width:65px;max-width:65px}
+  .c-MAHABA{background:#fce7f3;color:#9d174d}
+  .c-BADRY{background:#f0fdf4;color:#166534}
+  .days-ok{color:#16a34a;font-weight:600}
+  .days-warn{color:#d97706;font-weight:600}
+  .days-danger{color:#dc2626;font-weight:600}
+  .days-neg{color:#94a3b8}
+  .edit-cell input,.edit-cell select,.edit-cell textarea{width:100%;font-size:11px;padding:2px 3px;border-radius:4px;border:1px solid #c7d2e0;background:#fffef8;color:#222;font-family:inherit}
+  .edit-cell textarea{height:60px;resize:vertical;font-size:12px;width:100%;box-sizing:border-box}
+  .icon-btn{border:none;background:transparent;cursor:pointer;color:#94a3b8;font-size:15px;padding:3px 5px;border-radius:4px}
+  .icon-btn:hover{background:#f1f5f9;color:#334155}
+  .icon-btn.del:hover{color:#dc2626;background:#fee2e2}
+  .icon-btn.save:hover{color:#166534;background:#dcfce7}
+  .icon-btn.close-ship:hover{color:#7c3aed;background:#f5f3ff}
+  .empty{text-align:center;padding:2rem;color:#94a3b8}
+  .sub-text{font-size:10px;color:#94a3b8;margin-top:1px}
+  .footer{text-align:center;padding:14px;color:#aaa;font-size:11px}
+  @media print{.toolbar,.mode-bar,.btn{display:none!important}}
+
+  /* F Status Modal (original — kept as-is, now repurposed to open closure modal instead) */
+  #fModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center}
+  #fModal.active{display:flex}
+  #fModal .box{background:#fff;border-radius:12px;padding:28px 32px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+  #fModal .box h3{font-size:22px;margin-bottom:8px}
+  #fModal .box p{font-size:13px;color:#555;margin-bottom:20px}
+  #fModal .btns{display:flex;gap:10px;justify-content:center}
+  #fModal .btns button{padding:9px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+  #fModal .yes{background:#7c3aed;color:#fff}
+  #fModal .no{background:#e5e7eb;color:#374151}
+
+  /* ── additions only: spinner, toast, saving indicator ── */
+  #spinnerOverlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.55);z-index:9000;align-items:center;justify-content:center}
+  #spinnerOverlay.active{display:flex}
+  .spinner{width:38px;height:38px;border:4px solid #d0d7e2;border-top-color:#1a3a5c;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #toastContainer{position:fixed;bottom:24px;right:24px;z-index:9100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toast{padding:9px 16px;border-radius:7px;font-size:12px;font-weight:500;color:#fff;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:320px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.success{background:#166534}
+  .toast.error{background:#991b1b}
+  .toast.info{background:#1a3a5c}
+
+  #savingDot{display:none;width:8px;height:8px;border-radius:50%;background:#d97706;margin-left:6px;animation:pulse 1s infinite}
+  #savingDot.active{display:inline-block}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+  /* Color Picker */
+  .cp-btn{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:10px;font-weight:500;white-space:nowrap;font-family:inherit}
+  .cp-btn:hover{background:#f8fafc}
+  .cp-dot-sm{width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.1);flex-shrink:0;display:inline-block}
+  .cp-lbl{max-width:70px;overflow:hidden;text-overflow:ellipsis}
+  #sharedCpMenu{display:none;position:fixed;z-index:99999;background:#fff;border-radius:12px;padding:7px;min-width:190px;box-shadow:0 12px 36px rgba(0,0,0,.18);border:1px solid #e5e7eb}
+  .scp-opt{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;margin-bottom:2px;border:2px solid transparent;color:#1e293b;transition:border-color .1s}
+  .scp-opt:last-child{margin-bottom:0}
+  .scp-opt:hover{border-color:rgba(0,0,0,.18)}
+  .scp-opt.scp-sel{border-color:#1a3a5c}
+  .scp-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.1);flex-shrink:0;display:inline-block}
+
+  /* Row Colors */
+  .row-color-1 td{background:#f1f5f9!important}
+  .row-color-2 td{background:#eff6ff!important}
+  .row-color-3 td{background:#fffbeb!important}
+  .row-color-4 td{background:#fff7ed!important}
+  .row-color-5 td{background:#f5f3ff!important}
+  .row-color-6 td{background:#ecfdf5!important}
+  .row-color-7 td{background:#f0fdfa!important}
+  .row-color-8 td{background:#f0fdf4!important}
+  .row-color-9 td{background:#fef2f2!important}
+  tr[class*="row-color"]:hover td{filter:brightness(0.97)}
+  tr.row-active-edit td{background:#fffbeb!important;box-shadow:inset 0 0 0 1px #fbbf24}
+
+  /* Drag & Drop */
+  tr.dragging{opacity:.4}
+  tr.drag-over td{border-top:2px solid #1a3a5c!important}
+  td.drag-handle{cursor:grab;color:#cbd5e1;font-size:14px;user-select:none}
+  td.drag-handle:active{cursor:grabbing}
+  #refreshInfo{font-size:10px;color:#aaa;margin-left:4px}
+
+  /* ════════════════════════════════════════════════════════
+     TAB NAV
+  ════════════════════════════════════════════════════════ */
+  .tab-nav{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:0;padding:0 20px;background:#fff}
+  .tab-btn{font-size:13px;font-weight:500;padding:11px 20px;border:none;background:transparent;cursor:pointer;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+  .tab-btn:hover{color:#1a3a5c}
+  .tab-btn.active{color:#1a3a5c;border-bottom-color:#1a3a5c;font-weight:600}
+  .tab-btn.archive-tab.active{color:#7c3aed;border-bottom-color:#7c3aed}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+
+  /* ════════════════════════════════════════════════════════
+     CLOSURE MODAL
+  ════════════════════════════════════════════════════════ */
+  #closureModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+  #closureModal.active{display:flex}
+  .closure-box{background:#fff;border-radius:14px;width:92%;max-width:560px;box-shadow:0 16px 48px rgba(0,0,0,.22);overflow:hidden;margin-bottom:40px}
+  .closure-header{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+  .closure-header h2{font-size:16px;font-weight:600}
+  .closure-header .shipment-ref{font-size:12px;opacity:.8;margin-top:3px}
+  .closure-close-btn{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:18px;line-height:1}
+  .closure-close-btn:hover{background:rgba(255,255,255,.35)}
+  .closure-body{padding:20px 24px}
+  .closure-section{margin-bottom:18px}
+  .closure-section-title{font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ede9fe}
+  .closure-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .closure-grid.full{grid-template-columns:1fr}
+  .closure-field{display:flex;flex-direction:column;gap:4px}
+  .closure-field label{font-size:11px;color:#64748b;font-weight:500}
+  .closure-field input,.closure-field textarea,.closure-field select{font-size:12px;padding:7px 9px;border-radius:7px;border:1px solid #d0d7e2;color:#222;font-family:inherit;background:#fafafa;transition:border-color .15s}
+  .closure-field input:focus,.closure-field textarea:focus,.closure-field select:focus{outline:none;border-color:#7c3aed;background:#fff}
+  .closure-field textarea{height:70px;resize:vertical}
+  .total-cost-bar{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:9px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;border:1px solid #ddd6fe}
+  .total-cost-label{font-size:12px;color:#6d28d9;font-weight:600}
+  .total-cost-val{font-size:22px;font-weight:700;color:#6d28d9}
+  .closure-footer{padding:16px 24px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end;background:#fafafa}
+  .btn-archive{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn-archive:hover{background:#6d28d9}
+  .btn-cancel-closure{background:#e5e7eb;color:#374151;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer}
+  .btn-cancel-closure:hover{background:#d1d5db}
+
+  /* ════════════════════════════════════════════════════════
+     ARCHIVE TAB
+  ════════════════════════════════════════════════════════ */
+  .arch-summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+  @media(max-width:1100px){.arch-summary{grid-template-columns:repeat(3,1fr)}}
+  .arch-card{background:#fff;border-radius:8px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .arch-card .card-label{font-size:11px;color:#888;margin-bottom:4px}
+  .arch-card .card-val{font-size:18px;font-weight:600;color:#7c3aed}
+  .arch-card .card-sub{font-size:11px;color:#aaa;margin-top:2px}
+  .arch-toolbar{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+  .arch-toolbar select,.arch-toolbar input{font-size:12px;padding:5px 9px;border-radius:6px;border:1px solid #d0d7e2;background:#fff;color:#222;height:32px}
+  .arch-toolbar input{flex:1;min-width:150px}
+  .arch-tbl-wrap{overflow-x:auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+  .arch-tbl-wrap table th{background:#6d28d9}
+  .arch-tbl-wrap table th:first-child{border-radius:8px 0 0 0}
+  .arch-tbl-wrap table th:last-child{border-radius:0 8px 0 0}
+
+  /* Archive edit modal */
+  #archEditModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10001;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+  #archEditModal.active{display:flex}
+  .arch-edit-box{background:#fff;border-radius:14px;width:92%;max-width:620px;box-shadow:0 16px 48px rgba(0,0,0,.22);overflow:hidden;margin-bottom:40px}
+  .arch-edit-header{background:linear-gradient(135deg,#6d28d9,#5b21b6);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+  .arch-edit-header h2{font-size:15px;font-weight:600}
+  .arch-edit-body{padding:20px 24px}
+  .arch-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .arch-edit-grid.full{grid-template-columns:1fr}
+  .arch-edit-field{display:flex;flex-direction:column;gap:4px}
+  .arch-edit-field label{font-size:11px;color:#64748b;font-weight:500}
+  .arch-edit-field input,.arch-edit-field textarea{font-size:12px;padding:7px 9px;border-radius:7px;border:1px solid #d0d7e2;color:#222;font-family:inherit;background:#fafafa}
+  .arch-edit-field input:focus,.arch-edit-field textarea:focus{outline:none;border-color:#7c3aed;background:#fff}
+  .arch-edit-field textarea{height:65px;resize:vertical}
+  .arch-edit-footer{padding:14px 24px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end;background:#fafafa}
+
+  /* Export button */
+  .btn-export{border-color:#166534;color:#166534}
+  .btn-export:hover{background:#f0fdf4}
+
+  /* Currency selector inline */
+  .fee-row{display:flex;gap:6px;align-items:center}
+  .fee-row input[type="number"]{flex:1}
+  .cur-sel{width:68px!important;flex-shrink:0;font-size:11px!important;padding:6px 4px!important;border-radius:7px;border:1px solid #d0d7e2;background:#fafafa;color:#222;font-family:inherit;cursor:pointer}
+  .cur-sel:focus{outline:none;border-color:#7c3aed;background:#fff}
+  .cur-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap}
+  .cur-tag.egp{background:#fef9c3;color:#854d0e}
+  .cur-tag.usd{background:#dbeafe;color:#1e40af}
+</style>
+</head>
+<body>
+
+<!-- Spinner -->
+<div id="spinnerOverlay"><div class="spinner"></div></div>
+<!-- Toast -->
+<div id="toastContainer"></div>
+
+<div class="header">
+  <h1>📦 Clearance Tracker</h1>
+  <span id="headerInfo">Loading...</span>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('active')">🚢 Active Shipments</button>
+  <button class="tab-btn archive-tab" onclick="switchTab('archive')">🗄️ Archive</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 1: ACTIVE SHIPMENTS (original, unchanged)
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-active" class="tab-content active">
+<div class="wrap">
+  <div class="summary" id="summary"></div>
+
+  <div class="mode-bar">
+    <span class="mode-badge mode-view" id="modeBadge">View Mode</span>
+    <span class="hint" id="modeHint">اضغط Edit Mode لتفعيل التعديل</span>
+    <span id="savingDot" title="جاري الحفظ..."></span>
+    <span style="margin-left:auto;font-size:11px;color:#aaa" id="countInfo"></span>
+    <span id="refreshInfo"></span>
+  </div>
+
+  <div class="toolbar">
+    <select id="fBank"><option value="">كل البنوك</option><option>QNB</option><option>NBE</option><option>ATJ</option></select>
+    <select id="fStatus"><option value="">كل الحالات</option><option value="W">W</option><option value="B">B</option><option value="O">O</option><option value="F">F</option><option value="H">H</option><option value="C">C</option><option value="N">N</option><option value="W/O">W/O</option><option value="S-O">S-O</option><option value="S-B">S-B</option><option value="S-W">S-W</option></select>
+    <select id="fSupplier"><option value="">كل الموردين</option><option>Zaurak</option><option>Navigator</option></select>
+    <select id="fClearer"><option value="">كل الـ Clearers</option><option>Relan</option><option>Mahaba</option><option>El Badry</option></select>
+    <input id="fSearch" type="text" placeholder="بحث BL / عميل / بضاعة / Ref..."/>
+    <button class="btn btn-edit" id="btnToggleEdit" onclick="toggleEdit()">✏️ Edit Mode</button>
+    <button class="btn btn-add" id="btnAdd" onclick="addRow()">➕</button>
+    <button class="btn" onclick="window.print()">🖨️ Print</button>
+    <button class="btn" onclick="loadData(true)" title="تحديث يدوي">🔄 Refresh</button>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <colgroup>
+        <col style="width:18px"><col style="width:115px"><col style="width:60px"><col style="width:130px"><col style="width:100px"><col style="width:55px">
+        <col style="width:50px"><col style="width:88px"><col style="width:24px"><col style="width:55px">
+        <col style="width:50px"><col style="width:18px"><col style="width:18px"><col><col style="width:75px"><col style="width:55px"><col style="width:85px">
+      </colgroup>
+      <thead><tr>
+        <th style="width:22px">⠿</th><th>BL No. / Ref</th><th>SL</th><th>بضاعة</th><th>عميل / مورد</th><th>بنك</th>
+        <th>حاويات</th><th>مبلغ $</th><th>ETA</th><th>تخزين</th>
+        <th>وصول من البنك</th><th>أيام</th><th>حالة</th><th style="text-align:center">Clearer</th><th style="text-align:center">ملاحظات</th><th>🎨</th><th>⚙️</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div><!-- /tab-active -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     TAB 2: ARCHIVE
+═══════════════════════════════════════════════════════════ -->
+<div id="tab-archive" class="tab-content">
+<div class="wrap">
+
+  <!-- Dashboard -->
+  <div class="arch-summary" id="archSummary"></div>
+
+  <!-- Toolbar -->
+  <div class="arch-toolbar">
+    <select id="afSupplier"><option value="">كل الموردين</option><option>Zaurak</option><option>Navigator</option></select>
+    <select id="afBroker"><option value="">كل المخلصين</option></select>
+    <select id="afTransport"><option value="">كل شركات النقل</option></select>
+    <input id="afSearch" type="text" placeholder="بحث BL / عميل / Ref / مخلص / ناقل..."/>
+    <button class="btn btn-export" onclick="exportArchiveCSV()">📥 Export CSV</button>
+    <button class="btn" onclick="loadArchive(true)">🔄 Refresh</button>
+  </div>
+
+  <!-- Table -->
+  <div class="arch-tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>BL No.</th><th>Ref</th><th>بضاعة</th><th>عميل</th><th>مورد</th><th>بنك</th>
+        <th>مبلغ $</th><th>تاريخ الإغلاق</th>
+        <th>مخلص</th><th>تكلفة المخلص</th>
+        <th>شركة النقل</th><th>تكلفة النقل</th>
+        <th>حراسة/غرامات</th><th>مصروفات أخرى</th>
+        <th>إجمالي التكاليف</th><th>ملاحظات</th><th>⚙️</th>
+      </tr></thead>
+      <tbody id="archTbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div><!-- /tab-archive -->
+
+<!-- Shared Color Picker Menu -->
+<div id="sharedCpMenu"></div>
+
+<!-- ─────────────────────────────────────────────────────────
+     F STATUS MODAL (repurposed: opens closure modal)
+───────────────────────────────────────────────────────── -->
+<div id="fModal">
+  <div class="box">
+    <h3>🎉</h3>
+    <p style="font-size:15px;font-weight:600;color:#166534;margin-bottom:6px">الشحنة خلصت!</p>
+    <p>هل تريد أرشفتها وتسجيل تكاليف الإغلاق؟</p>
+    <div class="btns">
+      <button class="yes" onclick="fModalYes()">نعم، أرشف</button>
+      <button class="no" onclick="fModalNo()">لا، خليها</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────
+     CLOSURE MODAL
+───────────────────────────────────────────────────────── -->
+<div id="closureModal">
+  <div class="closure-box">
+    <div class="closure-header">
+      <div>
+        <h2>📦 إغلاق وأرشفة الشحنة</h2>
+        <div class="shipment-ref" id="closureRefLine"></div>
+      </div>
+      <button class="closure-close-btn" onclick="closeClosureModal()">✕</button>
+    </div>
+    <div class="closure-body">
+
+      <!-- حراسة وغرامات -->
+      <div class="closure-section">
+        <div class="closure-section-title">🛡️ حراسة وغرامات</div>
+        <div class="closure-grid full">
+          <div class="closure-field">
+            <label>تكلفة الحراسة والغرامات</label>
+            <div class="fee-row">
+              <input type="number" id="cl_guardFees" placeholder="0.00" min="0" step="0.01" oninput="updateTotalCost()"/>
+              <select class="cur-sel" id="cl_guardCur" onchange="updateTotalCost()">
+                <option value="EGP">🇪🇬 EGP</option>
+                <option value="USD">🇺🇸 USD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- مخلص جمركي -->
+      <div class="closure-section">
+        <div class="closure-section-title">📋 المخلص الجمركي</div>
+        <div class="closure-grid">
+          <div class="closure-field">
+            <label>اسم المخلص</label>
+            <input type="text" id="cl_brokerName" placeholder="اسم المخلص..."/>
+          </div>
+          <div class="closure-field">
+            <label>تكلفة المخلص</label>
+            <div class="fee-row">
+              <input type="number" id="cl_brokerFees" placeholder="0.00" min="0" step="0.01" oninput="updateTotalCost()"/>
+              <select class="cur-sel" id="cl_brokerCur" onchange="updateTotalCost()">
+                <option value="EGP">🇪🇬 EGP</option>
+                <option value="USD">🇺🇸 USD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- نقل -->
+      <div class="closure-section">
+        <div class="closure-section-title">🚛 النقل</div>
+        <div class="closure-grid">
+          <div class="closure-field">
+            <label>شركة النقل</label>
+            <input type="text" id="cl_transportCompany" placeholder="اسم الشركة..."/>
+          </div>
+          <div class="closure-field">
+            <label>تكلفة النقل</label>
+            <div class="fee-row">
+              <input type="number" id="cl_transportFees" placeholder="0.00" min="0" step="0.01" oninput="updateTotalCost()"/>
+              <select class="cur-sel" id="cl_transportCur" onchange="updateTotalCost()">
+                <option value="EGP">🇪🇬 EGP</option>
+                <option value="USD">🇺🇸 USD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- مصروفات أخرى -->
+      <div class="closure-section">
+        <div class="closure-section-title">💼 مصروفات أخرى</div>
+        <div class="closure-grid">
+          <div class="closure-field">
+            <label>المبلغ</label>
+            <div class="fee-row">
+              <input type="number" id="cl_otherFees" placeholder="0.00" min="0" step="0.01" oninput="updateTotalCost()"/>
+              <select class="cur-sel" id="cl_otherCur" onchange="updateTotalCost()">
+                <option value="EGP">🇪🇬 EGP</option>
+                <option value="USD">🇺🇸 USD</option>
+              </select>
+            </div>
+          </div>
+          <div class="closure-field">
+            <label>الوصف</label>
+            <input type="text" id="cl_otherFeesDesc" placeholder="وصف المصروفات..."/>
+          </div>
+        </div>
+      </div>
+
+      <!-- إجمالي — منفصل بالعملتين -->
+      <div class="total-cost-bar">
+        <span class="total-cost-label">💰 إجمالي تكاليف التخليص</span>
+        <div style="text-align:right">
+          <div id="cl_totalEGP" style="font-size:14px;font-weight:700;color:#854d0e"></div>
+          <div id="cl_totalUSD" style="font-size:14px;font-weight:700;color:#1e40af"></div>
+        </div>
+      </div>
+
+      <!-- ملاحظات -->
+      <div class="closure-section" style="margin-bottom:0">
+        <div class="closure-section-title">📝 ملاحظات الإغلاق</div>
+        <div class="closure-grid full">
+          <div class="closure-field">
+            <label>ملاحظات (اختياري)</label>
+            <textarea id="cl_notes" placeholder="أي ملاحظات إضافية..."></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="closure-footer">
+      <button class="btn-cancel-closure" onclick="closeClosureModal()">إلغاء</button>
+      <button class="btn-archive" onclick="confirmArchive()">🗄️ أرشف الشحنة</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────
+     ARCHIVE EDIT MODAL
+───────────────────────────────────────────────────────── -->
+<div id="archEditModal">
+  <div class="arch-edit-box">
+    <div class="arch-edit-header">
+      <h2>✏️ تعديل الشحنة المؤرشفة</h2>
+      <button class="closure-close-btn" onclick="closeArchEdit()">✕</button>
+    </div>
+    <div class="arch-edit-body">
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;color:#7c3aed;font-weight:600" id="archEditRef"></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ede9fe">بيانات الشحنة</div>
+      <div class="arch-edit-grid" style="margin-bottom:14px">
+        <div class="arch-edit-field"><label>BL Number</label><input id="ae_bl"/></div>
+        <div class="arch-edit-field"><label>Ref</label><input id="ae_ref"/></div>
+        <div class="arch-edit-field"><label>عميل</label><input id="ae_client"/></div>
+        <div class="arch-edit-field"><label>مورد</label><input id="ae_supplier"/></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ede9fe">التكاليف</div>
+      <div class="arch-edit-grid" style="margin-bottom:14px">
+        <div class="arch-edit-field"><label>اسم المخلص</label><input id="ae_brokerName"/></div>
+        <div class="arch-edit-field">
+          <label>تكلفة المخلص</label>
+          <div class="fee-row">
+            <input type="number" id="ae_brokerFees" step="0.01" oninput="updateAETotal()"/>
+            <select class="cur-sel" id="ae_brokerCur"><option value="EGP">🇪🇬 EGP</option><option value="USD">🇺🇸 USD</option></select>
+          </div>
+        </div>
+        <div class="arch-edit-field"><label>شركة النقل</label><input id="ae_transportCompany"/></div>
+        <div class="arch-edit-field">
+          <label>تكلفة النقل</label>
+          <div class="fee-row">
+            <input type="number" id="ae_transportFees" step="0.01" oninput="updateAETotal()"/>
+            <select class="cur-sel" id="ae_transportCur"><option value="EGP">🇪🇬 EGP</option><option value="USD">🇺🇸 USD</option></select>
+          </div>
+        </div>
+        <div class="arch-edit-field">
+          <label>حراسة / غرامات</label>
+          <div class="fee-row">
+            <input type="number" id="ae_guardFees" step="0.01" oninput="updateAETotal()"/>
+            <select class="cur-sel" id="ae_guardCur"><option value="EGP">🇪🇬 EGP</option><option value="USD">🇺🇸 USD</option></select>
+          </div>
+        </div>
+        <div class="arch-edit-field">
+          <label>مصروفات أخرى</label>
+          <div class="fee-row">
+            <input type="number" id="ae_otherFees" step="0.01" oninput="updateAETotal()"/>
+            <select class="cur-sel" id="ae_otherCur"><option value="EGP">🇪🇬 EGP</option><option value="USD">🇺🇸 USD</option></select>
+          </div>
+        </div>
+        <div class="arch-edit-field arch-edit-grid full"><label>وصف المصروفات الأخرى</label><input id="ae_otherFeesDesc"/></div>
+      </div>
+
+      <div class="total-cost-bar" style="margin-bottom:14px">
+        <span class="total-cost-label">💰 إجمالي التكاليف</span>
+        <div style="text-align:right">
+          <div id="ae_totalEGP" style="font-size:13px;font-weight:700;color:#854d0e"></div>
+          <div id="ae_totalUSD" style="font-size:13px;font-weight:700;color:#1e40af"></div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #ede9fe">ملاحظات</div>
+      <div class="arch-edit-grid full" style="margin-bottom:4px">
+        <div class="arch-edit-field"><label>ملاحظات الإغلاق</label><textarea id="ae_notes"></textarea></div>
+      </div>
+    </div>
+    <div class="arch-edit-footer">
+      <button class="btn-cancel-closure" onclick="closeArchEdit()">إلغاء</button>
+      <button class="btn-archive" onclick="saveArchEdit()">💾 حفظ التعديلات</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">UPI Clearance Tracker — <span id="today"></span></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwlfx06cM8wTQAdXJoQtWU6c2hcJhh8cjsUmGr4zPU2aKDyxVPvaB0mdsEaQaRgxXYm/exec';
+const AUTO_REFRESH_INTERVAL = 60000;
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let rows         = [];
+let archiveRows  = [];
+let editMode     = false;
+let editRowId    = null;
+let nextId       = Date.now();
+let saveTimer    = null;
+let refreshCountdown = AUTO_REFRESH_INTERVAL / 1000;
+let refreshInterval  = null;
+
+// Closure state
+let _closurePendingRow = null;
+
+// Archive edit state
+let _archEditRow = null;
+
+document.getElementById('today').textContent = new Date().toLocaleDateString('en-GB');
+
+// ════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════════════════
+function showSpinner()  { document.getElementById('spinnerOverlay').classList.add('active') }
+function hideSpinner()  { document.getElementById('spinnerOverlay').classList.remove('active') }
+function showSaving()   { document.getElementById('savingDot').classList.add('active') }
+function hideSaving()   { document.getElementById('savingDot').classList.remove('active') }
+
+function toast(msg, type='info', duration=3000) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, duration);
+}
+
+// ════════════════════════════════════════════════════════════
+//  TAB SWITCHING
+// ════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0&&tab==='active')||(i===1&&tab==='archive'));
+  });
+  document.getElementById('tab-active').classList.toggle('active', tab==='active');
+  document.getElementById('tab-archive').classList.toggle('active', tab==='archive');
+  if (tab === 'archive') loadArchive(false);
+}
+
+// ════════════════════════════════════════════════════════════
+//  API LAYER
+// ════════════════════════════════════════════════════════════
+async function apiGetAll() {
+  const url = API_URL + '?action=read&t=' + Date.now();
+  const res  = await fetch(url, { redirect: 'follow' });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('GAS parse error'); }
+  if (data && data.error) throw new Error(data.error);
+  return Array.isArray(data) ? data : [];
+}
+
+async function apiGetArchive() {
+  const url = API_URL + '?action=archive_read&t=' + Date.now();
+  const res  = await fetch(url, { redirect: 'follow' });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) { throw new Error('GAS parse error'); }
+  if (data && data.error) throw new Error(data.error);
+  return Array.isArray(data) ? data : [];
+}
+
+function gasFormPost(params) {
+  return new Promise((resolve) => {
+    const iframeId = 'gas_iframe_' + Date.now();
+    const formId   = 'gas_form_'   + Date.now();
+    const iframe   = document.createElement('iframe');
+    iframe.id = iframeId; iframe.name = iframeId; iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.id = formId; form.method = 'POST'; form.action = API_URL;
+    form.target = iframeId; form.style.display = 'none';
+    Object.entries(params).forEach(([k,v]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = k; input.value = String(v);
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    const cleanup = () => { setTimeout(() => { iframe.remove(); form.remove(); }, 500); resolve(true); };
+    iframe.onload = cleanup;
+    setTimeout(cleanup, 4000);
+    form.submit();
+  });
+}
+
+async function apiCreate(row)       { await gasFormPost({ action:'create', data:JSON.stringify(row) }); }
+async function apiUpdate(row)       { await gasFormPost({ action:'update', data:JSON.stringify(row) }); }
+async function apiDelete(id)        { await gasFormPost({ action:'delete', id:String(id) }); }
+
+async function apiArchiveCreate(shipment, closure) {
+  await gasFormPost({ action:'archive_create', data:JSON.stringify({ shipment, closure }) });
+}
+async function apiArchiveUpdate(row) {
+  await gasFormPost({ action:'archive_update', data:JSON.stringify(row) });
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOAD DATA
+// ════════════════════════════════════════════════════════════
+async function loadData(manual=false) {
+  if (manual) showSpinner();
+  try {
+    const data = await apiGetAll();
+    if (Array.isArray(data)) {
+      rows = data.map(r => ({
+        ...r,
+        amount : parseFloat(r.amount)||0,
+        days   : parseInt(r.days)||0,
+        order  : (r.order!==''&&r.order!==null&&r.order!==undefined&&!isNaN(parseInt(r.order))) ? parseInt(r.order) : 9999,
+      })).sort((a,b) => a.order-b.order);
+      render();
+      if (manual) toast('تم تحديث البيانات ✓','success');
+    }
+  } catch(err) {
+    toast('خطأ في تحميل البيانات: '+err.message,'error',5000);
+    console.error('loadData error',err);
+  } finally {
+    if (manual) hideSpinner();
+  }
+}
+
+async function loadArchive(manual=false) {
+  showSpinner();
+  try {
+    const data = await apiGetArchive();
+    archiveRows = Array.isArray(data) ? data.map(r => ({
+      ...r,
+      amount        : parseFloat(r.amount)||0,
+      guardFees     : parseFloat(r.guardFees)||0,
+      brokerFees    : parseFloat(r.brokerFees)||0,
+      transportFees : parseFloat(r.transportFees)||0,
+      otherFees     : parseFloat(r.otherFees)||0,
+      totalCostEGP  : parseFloat(r.totalCostEGP)||0,
+      totalCostUSD  : parseFloat(r.totalCostUSD)||0,
+      totalCost     : parseFloat(r.totalCost)||0,
+    })) : [];
+    renderArchive();
+    populateArchiveFilters();
+    if (manual) toast('تم تحديث الأرشيف ✓','success');
+  } catch(err) {
+    document.getElementById('archTbody').innerHTML =
+      `<tr><td colspan="17" class="empty" style="color:#dc2626">⚠️ خطأ في تحميل الأرشيف: ${err.message}<br><small>تأكد من الـ GAS deployment</small></td></tr>`;
+    if (manual) toast('خطأ في تحميل الأرشيف: '+err.message,'error',5000);
+  } finally {
+    hideSpinner();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTO REFRESH
+// ════════════════════════════════════════════════════════════
+function startAutoRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshCountdown = AUTO_REFRESH_INTERVAL / 1000;
+  refreshInterval = setInterval(async () => {
+    refreshCountdown--;
+    const el = document.getElementById('refreshInfo');
+    if (el) el.textContent = `🔁 ${refreshCountdown}s`;
+    if (refreshCountdown <= 0) {
+      refreshCountdown = AUTO_REFRESH_INTERVAL / 1000;
+      await loadData(false);
+    }
+  }, 1000);
+}
+
+// ════════════════════════════════════════════════════════════
+//  FIELD UPDATE
+// ════════════════════════════════════════════════════════════
+function updateField(id, field, val) {
+  const r = rows.find(x => String(x.id) === String(id));
+  if (!r) return;
+
+  if (field === 'status' && val === 'F') {
+    r[field] = val;
+    updateSummary(getFiltered());
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => persistUpdate(r), 600);
+    // open fModal first
+    window._fPendingId  = id;
+    window._fPendingRow = r;
+    document.getElementById('fModal').classList.add('active');
+    return;
+  }
+
+  if (field === 'amount') r[field] = parseFloat(val)||0;
+  else if (field === 'days') r[field] = parseInt(val)||0;
+  else if (['eta','storage','rcvd'].includes(field)) r[field] = val ? String(val).slice(0,10) : '';
+  else r[field] = val;
+
+  updateSummary(getFiltered());
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => persistUpdate(r), 600);
+}
+
+async function persistUpdate(r) {
+  showSaving();
+  try { await apiUpdate(r); hideSaving(); }
+  catch(err) { hideSaving(); toast('خطأ في الحفظ: '+err.message,'error',5000); }
+}
+
+async function manualSave(id) {
+  const r = rows.find(x => String(x.id) === String(id));
+  if (!r) return;
+  clearTimeout(saveTimer);
+  const btn = document.querySelector(`button.save[onclick*="${id}"]`);
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  showSaving();
+  try {
+    await apiUpdate(r);
+    hideSaving(); toast('تم الحفظ ✓','success');
+    editRowId = null; render();
+  } catch(err) { hideSaving(); toast('خطأ في الحفظ: '+err.message,'error',5000); }
+  finally { if (btn) { btn.textContent = '💾'; btn.disabled = false; } }
+}
+
+// ════════════════════════════════════════════════════════════
+//  DELETE
+// ════════════════════════════════════════════════════════════
+async function deleteRow(id) {
+  if (!confirm('تأكيد حذف الشحنة؟ لا يمكن التراجع.')) return;
+  showSpinner();
+  try {
+    await apiDelete(id);
+    rows = rows.filter(r => String(r.id) !== String(id));
+    render();
+    toast('تم حذف الشحنة ✓','success');
+  } catch(err) { toast('خطأ في الحذف: '+err.message,'error',5000); }
+  finally { hideSpinner(); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  ADD ROW
+// ════════════════════════════════════════════════════════════
+function uniqueId() {
+  const existing = new Set(rows.map(r => Number(r.id)).filter(n => n < 100000));
+  let id = 101;
+  while (existing.has(id)) id++;
+  return String(id);
+}
+
+async function addRow() {
+  const newRow = {
+    id:'', bl:'BL-NEW', sl:'', ref:'', goods:'', supplier:'Navigator',
+    client:'', bank:'NBE', amount:0, cntr:'1x40', eta:'', storage:'',
+    rcvd:'', days:0, status:'N', clearer:'', comment:'', rowColor:''
+  };
+  newRow.id = uniqueId();
+  showSpinner();
+  try {
+    await apiCreate(newRow);
+    rows.push(newRow);
+    render();
+    toast('تمت إضافة شحنة جديدة ✓','success');
+    document.getElementById('tbody').lastElementChild?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  } catch(err) { toast('خطأ في الإضافة: '+err.message,'error',5000); }
+  finally { hideSpinner(); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  TOGGLE EDIT MODE
+// ════════════════════════════════════════════════════════════
+function openEditRow(id) {
+  editRowId = (editRowId === String(id)) ? null : String(id);
+  if (editRowId) editMode = true;
+  render();
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const badge = document.getElementById('modeBadge');
+  const btn   = document.getElementById('btnToggleEdit');
+  if (editMode) {
+    badge.textContent = 'Edit Mode'; badge.className = 'mode-badge mode-edit';
+    btn.textContent   = '👁 View Mode';
+    document.getElementById('modeHint').textContent = 'عدّل أي خلية — يتحفظ تلقائيًا في Google Sheets';
+  } else {
+    badge.textContent = 'View Mode'; badge.className = 'mode-badge mode-view';
+    btn.textContent   = '✏️ Edit Mode';
+    document.getElementById('modeHint').textContent = 'اضغط Edit Mode لتفعيل التعديل';
+  }
+  render();
+}
+
+// ════════════════════════════════════════════════════════════
+//  FILTER
+// ════════════════════════════════════════════════════════════
+function getFiltered() {
+  const bank     = document.getElementById('fBank').value;
+  const status   = document.getElementById('fStatus').value;
+  const supplier = document.getElementById('fSupplier').value;
+  const clearer  = document.getElementById('fClearer').value;
+  const q        = document.getElementById('fSearch').value.toLowerCase();
+  return rows.filter(r => {
+    if (bank     && r.bank     !== bank)     return false;
+    if (status   && r.status   !== status)   return false;
+    if (supplier && r.supplier !== supplier) return false;
+    if (clearer  && r.clearer  !== clearer)  return false;
+    if (q && !([r.bl,r.goods,r.client,r.ref].join(' ').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function getArchiveFiltered() {
+  const supplier  = document.getElementById('afSupplier').value;
+  const broker    = document.getElementById('afBroker').value;
+  const transport = document.getElementById('afTransport').value;
+  const q         = document.getElementById('afSearch').value.toLowerCase();
+  return archiveRows.filter(r => {
+    if (supplier  && r.supplier         !== supplier)  return false;
+    if (broker    && r.brokerName       !== broker)    return false;
+    if (transport && r.transportCompany !== transport) return false;
+    if (q && !([r.bl,r.client,r.ref,r.goods,r.brokerName,r.transportCompany].join(' ').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER HELPERS (unchanged)
+// ════════════════════════════════════════════════════════════
+const ROW_COLORS = [
+  { val:'',  label:'بدون لون',           hex:'',        bg:'#f9fafb' },
+  { val:'1', label:'لسه موصلتش',         hex:'#94A3B8', bg:'#f1f5f9' },
+  { val:'2', label:'وصلت',               hex:'#60A5FA', bg:'#eff6ff' },
+  { val:'3', label:'في انتظار سحب إذن', hex:'#FCD34D', bg:'#fffbeb' },
+  { val:'4', label:'تم سحب الإذن',      hex:'#FB923C', bg:'#fff7ed' },
+  { val:'5', label:'تحت العمل',          hex:'#A78BFA', bg:'#f5f3ff' },
+  { val:'6', label:'خرجت',               hex:'#34D399', bg:'#ecfdf5' },
+  { val:'7', label:'مع الناقل',          hex:'#2DD4BF', bg:'#f0fdfa' },
+  { val:'8', label:'تم التسليم',         hex:'#4ADE80', bg:'#f0fdf4' },
+  { val:'9', label:'مشكلة',              hex:'#F87171', bg:'#fef2f2' },
+];
+
+function cpHtml(id, cur) {
+  const c = ROW_COLORS.find(x => x.val === String(cur||'')) || ROW_COLORS[0];
+  return '<button class="cp-btn" data-cptoggle="'+id+'" title="لون الصف">'+
+    '<span class="cp-dot-sm" style="background:'+(c.hex||'#e2e8f0')+'"></span>'+
+    '<span class="cp-lbl">'+(c.val ? c.label : 'لون')+'</span></button>';
+}
+
+let _cpOpenId = null;
+function cpToggle(id) {
+  if (_cpOpenId === id) { cpClose(); return; }
+  _cpOpenId = id;
+  const btn  = document.querySelector('[data-cptoggle="'+id+'"]');
+  const menu = document.getElementById('sharedCpMenu');
+  if (!btn || !menu) return;
+  const cur = String((rows.find(r => String(r.id)===String(id))||{}).rowColor||'');
+  menu.innerHTML = ROW_COLORS.map(o =>
+    '<div class="scp-opt'+(o.val===cur?' scp-sel':'')+'" style="background:'+(o.bg||'#f9fafb')+'"'+
+    ' data-cpid="'+id+'" data-cpval="'+o.val+'">'+
+    '<span class="scp-dot" style="background:'+(o.hex||'#e2e8f0')+'"></span>'+o.label+'</div>'
+  ).join('');
+  const rect = btn.getBoundingClientRect();
+  const menuW = 190;
+  const left  = Math.min(rect.left, window.innerWidth-menuW-8);
+  menu.style.cssText = 'display:block;top:'+(rect.bottom+4)+'px;left:'+left+'px;';
+}
+
+function cpClose() {
+  _cpOpenId = null;
+  const m = document.getElementById('sharedCpMenu');
+  if (m) m.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  const tb = e.target.closest('[data-cptoggle]');
+  if (tb) { e.stopPropagation(); cpToggle(tb.dataset.cptoggle); return; }
+  const op = e.target.closest('[data-cpid]');
+  if (op) { e.stopPropagation(); updateRowColor(op.dataset.cpid, op.dataset.cpval); return; }
+  cpClose();
+});
+document.addEventListener('scroll', cpClose, true);
+
+function fmtAmt(v) { return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+function bankCls(b) { return b==='QNB'?'bank-QNB':b==='NBE'?'bank-NBE':b==='ATJ'?'bank-ATJ':'bank-QNB' }
+function statusCls(s) { const m={'W':'s-W','B':'s-B','O':'s-O','S-B':'s-SB','S-O':'s-SO','S-W':'s-SW','F':'s-F','H':'s-H','C':'s-C','N':'s-N','W/O':'s-WO'}; return m[s]||'s-N' }
+function daysCls(d) { d=Number(d); if(d<=0)return 'days-neg'; if(d>10)return 'days-danger'; if(d>4)return 'days-warn'; return 'days-ok' }
+
+function calcDays(eta) {
+  if (!eta) return null;
+  const s = String(eta);
+  const raw = s.includes('T') ? s.split('T')[0] : s.slice(0,10);
+  const parts = raw.split('-');
+  if (parts.length !== 3) return null;
+  const etaDate = new Date(Number(parts[0]),Number(parts[1])-1,Number(parts[2]));
+  if (isNaN(etaDate)) return null;
+  const today = new Date(); today.setHours(0,0,0,0); etaDate.setHours(0,0,0,0);
+  return Math.round((etaDate-today)/(1000*60*60*24));
+}
+
+function statusOpts(cur) { return ['W','B','O','F','H','C','N','W/O','S-O','S-B','S-W'].map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('') }
+function bankOpts(cur)   { return ['QNB','NBE','ATJ'].map(b=>`<option${b===cur?' selected':''}>${b}</option>`).join('') }
+function suppOpts(cur)   { return ['Zaurak','Navigator'].map(s=>`<option${s===cur?' selected':''}>${s}</option>`).join('') }
+function clearerOpts(cur){ return ['','Relan','Mahaba','El Badry'].map(c=>`<option value="${c}"${c===cur?' selected':''}>${c||'—'}</option>`).join('') }
+
+function fmtDateInput(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  const raw = s.includes('T') ? s.split('T')[0] : s.slice(0,10);
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) { const p=raw.split('/'); return p[2]+'-'+p[1]+'-'+p[0]; }
+  return raw;
+}
+
+function fmtDateDisplay(v) {
+  if (!v) return '—';
+  const s = String(v);
+  const dateOnly = s.includes('T') ? s.split('T')[0] : s.slice(0,10);
+  const parts = dateOnly.split('-');
+  if (parts.length===3 && parts[0].length===4) return parts[2]+'/'+parts[1]+'/'+parts[0];
+  return v||'—';
+}
+
+function esc(v) {
+  return String(v||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function viewRow(r) {
+  const d = calcDays(r.eta);
+  return `
+    <td class="drag-handle" title="اسحب لتغيير الترتيب">⠿</td>
+    <td><div style="font-weight:600;font-size:11px">${r.bl}</div><div class="sub-text">${r.ref}</div></td>
+    <td style="font-size:11px">${r.sl||'—'}</td>
+    <td>${r.goods}</td>
+    <td><div>${r.client}</div><div class="sub-text">${r.supplier}</div></td>
+    <td><span class="badge ${bankCls(r.bank)}">${r.bank}</span></td>
+    <td>${r.cntr}</td>
+    <td style="font-weight:600">${fmtAmt(r.amount)}</td>
+    <td>${fmtDateDisplay(r.eta)}</td>
+    <td style="font-size:11px">${fmtDateDisplay(r.storage)}</td>
+    <td style="font-size:11px">${fmtDateDisplay(r.rcvd)}</td>
+    <td class="${d===null?'days-neg':daysCls(d)}">${d===null?'—':d}</td>
+    <td><span class="badge ${statusCls(r.status)}">${r.status}</span></td>
+    <td style="text-align:center;width:75px;min-width:75px;max-width:75px"><span class="badge ${r.clearer==='Relan'?'c-RELAN':r.clearer==='Mahaba'?'c-MAHABA':r.clearer==='El Badry'?'c-BADRY':'s-N'}">${r.clearer||'—'}</span></td>
+    <td style="color:#666;font-size:11px;word-break:break-word;min-width:200px">${r.comment||'—'}</td>
+    <td style="text-align:center">${cpHtml(r.id,r.rowColor||'')}</td>
+    <td style="white-space:nowrap">
+      <button class="icon-btn" onclick="openEditRow('${r.id}')" title="تعديل">✏️</button>
+      <button class="icon-btn close-ship" onclick="openClosureModal('${r.id}')" title="إغلاق وأرشفة">🗄️</button>
+    </td>`;
+}
+
+function editRow(r) {
+  const id = r.id;
+  return `
+    <td class="drag-handle">⠿</td>
+    <td class="edit-cell">
+      <input value="${esc(r.bl)}" onchange="updateField('${id}','bl',this.value)" style="margin-bottom:2px"/>
+      <input value="${esc(r.ref)}" onchange="updateField('${id}','ref',this.value)" placeholder="Ref..."/>
+    </td>
+    <td class="edit-cell"><input value="${esc(r.sl||'')}" onchange="updateField('${id}','sl',this.value)" placeholder="SL..."/></td>
+    <td class="edit-cell"><input value="${esc(r.goods)}" onchange="updateField('${id}','goods',this.value)"/></td>
+    <td class="edit-cell">
+      <input value="${esc(r.client)}" onchange="updateField('${id}','client',this.value)" style="margin-bottom:2px"/>
+      <select onchange="updateField('${id}','supplier',this.value)">${suppOpts(r.supplier)}</select>
+    </td>
+    <td class="edit-cell"><select onchange="updateField('${id}','bank',this.value)">${bankOpts(r.bank)}</select></td>
+    <td class="edit-cell"><input value="${esc(r.cntr)}" onchange="updateField('${id}','cntr',this.value)"/></td>
+    <td class="edit-cell"><input type="number" value="${r.amount}" onchange="updateField('${id}','amount',this.value)" step="0.01"/></td>
+    <td class="edit-cell" style="width:90px;min-width:90px"><input type="date" value="${fmtDateInput(r.eta)}" onchange="updateField('${id}','eta',this.value)" style="width:88px;font-size:10px;padding:1px"/></td>
+    <td class="edit-cell" style="width:90px;min-width:90px"><input type="date" value="${fmtDateInput(r.storage)}" onchange="updateField('${id}','storage',this.value)" style="width:88px;font-size:10px;padding:1px"/></td>
+    <td class="edit-cell" style="width:90px;min-width:90px"><input type="date" value="${fmtDateInput(r.rcvd)}" onchange="updateField('${id}','rcvd',this.value)" style="width:88px;font-size:10px;padding:1px"/></td>
+    <td style="text-align:center;color:#94a3b8;font-size:11px">${calcDays(r.eta)}d</td>
+    <td class="edit-cell"><select onchange="updateField('${id}','status',this.value)">${statusOpts(r.status)}</select></td>
+    <td class="edit-cell" style="text-align:center;min-width:75px"><select style="width:100%" onchange="updateField('${id}','clearer',this.value)">${clearerOpts(r.clearer||'')}</select></td>
+    <td class="edit-cell" style="min-width:300px"><textarea onchange="updateField('${id}','comment',this.value)" style="width:100%;height:60px">${esc(r.comment)}</textarea></td>
+    <td style="text-align:center">${cpHtml(r.id,r.rowColor||'')}</td>
+    <td style="white-space:nowrap">
+      <button class="icon-btn save" onclick="manualSave('${id}')" title="حفظ">💾</button>
+      <button class="icon-btn close-ship" onclick="openClosureModal('${id}')" title="إغلاق وأرشفة">🗄️</button>
+      <button class="icon-btn del" onclick="deleteRow('${id}')" title="حذف">🗑</button>
+    </td>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  SUMMARY CARDS
+// ════════════════════════════════════════════════════════════
+function updateSummary(filtered) {
+  const total  = filtered.reduce((s,r) => s+Number(r.amount),0);
+  const byBank = { QNB:0, NBE:0, ATJ:0 };
+  filtered.forEach(r => { if (byBank[r.bank]!==undefined) byBank[r.bank]+=Number(r.amount) });
+  const inPort = filtered.filter(r => r.status==='W').length;
+  document.getElementById('summary').innerHTML = `
+    <div class="card"><div class="card-label">إجمالي المبالغ</div><div class="card-val">${fmtAmt(total)}</div><div class="card-sub">${filtered.length} شحنة</div></div>
+    <div class="card"><div class="card-label">QNB</div><div class="card-val">${fmtAmt(byBank.QNB)}</div><div class="card-sub">${filtered.filter(r=>r.bank==='QNB').length} شحنة</div></div>
+    <div class="card"><div class="card-label">NBE</div><div class="card-val">${fmtAmt(byBank.NBE)}</div><div class="card-sub">${filtered.filter(r=>r.bank==='NBE').length} شحنة</div></div>
+    <div class="card"><div class="card-label">ATJ</div><div class="card-val">${fmtAmt(byBank.ATJ)}</div><div class="card-sub">${filtered.filter(r=>r.bank==='ATJ').length} شحنة</div></div>
+    <div class="card"><div class="card-label">في الميناء</div><div class="card-val" style="color:#dc2626">${inPort}</div><div class="card-sub">شحنة نشطة</div></div>`;
+  document.getElementById('headerInfo').textContent = `${filtered.length} شحنة — إجمالي ${fmtAmt(total)}`;
+  document.getElementById('countInfo').textContent  = `عرض ${filtered.length} من ${rows.length}`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════════
+function render() {
+  const filtered = getFiltered();
+  updateSummary(filtered);
+  const tbody = document.getElementById('tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="17" class="empty">لا توجد نتائج</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(r => {
+    const isEditing = editRowId === String(r.id);
+    const cls = getRowClass(r.rowColor) + (isEditing?' row-active-edit':'');
+    return `<tr data-id="${r.id}" class="${cls}">${isEditing ? editRow(r) : viewRow(r)}</tr>`;
+  }).join('');
+  initDrag();
+}
+
+function getRowClass(rc) { return rc ? 'row-color-'+rc : ''; }
+
+function fmtCost(amt, cur) {
+  if (!amt) return '—';
+  const n = Number(amt).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (cur === 'USD') return `<span class="cur-tag usd">$${n}</span>`;
+  return `<span class="cur-tag egp">ج${n}</span>`;
+}
+// ════════════════════════════════════════════════════════════
+//  RENDER ARCHIVE
+// ════════════════════════════════════════════════════════════
+  const filtered = getArchiveFiltered();
+  renderArchiveSummary(filtered);
+
+  const tbody = document.getElementById('archTbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="17" class="empty">لا توجد شحنات مؤرشفة</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td style="font-weight:600;font-size:11px">${esc(r.bl)}<div class="sub-text">${esc(r.ref||'')}</div></td>
+      <td style="font-size:11px">${esc(r.ref||'—')}</td>
+      <td>${esc(r.goods||'—')}</td>
+      <td>${esc(r.client||'—')}</td>
+      <td><div class="sub-text">${esc(r.supplier||'—')}</div></td>
+      <td><span class="badge ${bankCls(r.bank)}">${r.bank||'—'}</span></td>
+      <td style="font-weight:600">${fmtAmt(r.amount)}</td>
+      <td style="font-size:11px">${fmtDateDisplay(r.closedAt)}</td>
+      <td>${esc(r.brokerName||'—')}</td>
+      <td>${fmtCost(r.brokerFees, r.brokerCur)}</td>
+      <td>${esc(r.transportCompany||'—')}</td>
+      <td>${fmtCost(r.transportFees, r.transportCur)}</td>
+      <td>${fmtCost(r.guardFees, r.guardCur)}</td>
+      <td>${fmtCost(r.otherFees, r.otherCur)}</td>
+      <td style="font-weight:600;color:#7c3aed;white-space:nowrap">${r.totalCostEGP?`<span class="cur-tag egp">ج${Number(r.totalCostEGP).toLocaleString('en-US',{minimumFractionDigits:2})}</span>`:''}${r.totalCostEGP&&r.totalCostUSD?' ':'' }${r.totalCostUSD?`<span class="cur-tag usd">$${Number(r.totalCostUSD).toLocaleString('en-US',{minimumFractionDigits:2})}</span>`:(!r.totalCostEGP?'—':'')}</td>
+      <td style="font-size:11px;color:#666;max-width:160px;word-break:break-word">${esc(r.closureNotes||'—')}</td>
+      <td><button class="icon-btn" onclick="openArchEdit('${r.id}')" title="تعديل">✏️</button></td>
+    </tr>`).join('');
+}
+
+function renderArchiveSummary(filtered) {
+  const totShip     = filtered.length;
+  const totTransport = filtered.reduce((s,r) => s+r.transportFees, 0);
+  const totBroker   = filtered.reduce((s,r) => s+r.brokerFees, 0);
+  const totGuard    = filtered.reduce((s,r) => s+r.guardFees, 0);
+  const totOther    = filtered.reduce((s,r) => s+r.otherFees, 0);
+  const totAll      = filtered.reduce((s,r) => s+r.totalCost, 0);
+
+  document.getElementById('archSummary').innerHTML = `
+    <div class="arch-card"><div class="card-label">إجمالي الشحنات المغلقة</div><div class="card-val">${totShip}</div><div class="card-sub">شحنة مؤرشفة</div></div>
+    <div class="arch-card"><div class="card-label">تكاليف النقل</div><div class="card-val">${fmtAmt(totTransport)}</div><div class="card-sub">إجمالي</div></div>
+    <div class="arch-card"><div class="card-label">تكاليف المخلصين</div><div class="card-val">${fmtAmt(totBroker)}</div><div class="card-sub">إجمالي</div></div>
+    <div class="arch-card"><div class="card-label">حراسة وغرامات</div><div class="card-val">${fmtAmt(totGuard)}</div><div class="card-sub">إجمالي</div></div>
+    <div class="arch-card"><div class="card-label">مصروفات أخرى</div><div class="card-val">${fmtAmt(totOther)}</div><div class="card-sub">إجمالي</div></div>
+    <div class="arch-card"><div class="card-label">إجمالي المصروفات الكلية</div><div class="card-val" style="font-size:16px">${fmtAmt(totAll)}</div><div class="card-sub">كل الشحنات</div></div>`;
+}
+
+function populateArchiveFilters() {
+  const brokers   = [...new Set(archiveRows.map(r => r.brokerName).filter(Boolean))];
+  const transports= [...new Set(archiveRows.map(r => r.transportCompany).filter(Boolean))];
+
+  const bSel = document.getElementById('afBroker');
+  const cur  = bSel.value;
+  bSel.innerHTML = '<option value="">كل المخلصين</option>' +
+    brokers.map(b => `<option value="${esc(b)}"${b===cur?' selected':''}>${esc(b)}</option>`).join('');
+
+  const tSel = document.getElementById('afTransport');
+  const curT = tSel.value;
+  tSel.innerHTML = '<option value="">كل شركات النقل</option>' +
+    transports.map(t => `<option value="${esc(t)}"${t===curT?' selected':''}>${esc(t)}</option>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+//  CLOSURE MODAL
+// ════════════════════════════════════════════════════════════
+function openClosureModal(id) {
+  const r = rows.find(x => String(x.id) === String(id));
+  if (!r) return;
+  _closurePendingRow = r;
+
+  // Reset amounts
+  ['cl_guardFees','cl_brokerFees','cl_transportFees','cl_otherFees'].forEach(f => {
+    const el = document.getElementById(f); if (el) el.value = '';
+  });
+  // Reset currency selects to EGP default
+  ['cl_guardCur','cl_brokerCur','cl_transportCur','cl_otherCur'].forEach(f => {
+    const el = document.getElementById(f); if (el) el.value = 'EGP';
+  });
+  ['cl_transportCompany','cl_otherFeesDesc','cl_notes'].forEach(f => {
+    const el = document.getElementById(f); if (el) el.value = '';
+  });
+
+  // ── auto-fill broker name from clearer ──
+  document.getElementById('cl_brokerName').value = r.clearer || '';
+
+  document.getElementById('cl_totalEGP').textContent = '';
+  document.getElementById('cl_totalUSD').textContent = '';
+  document.getElementById('closureRefLine').textContent = `${r.bl}${r.ref ? ' — '+r.ref : ''} | ${r.client}`;
+  document.getElementById('closureModal').classList.add('active');
+}
+
+function closeClosureModal() {
+  document.getElementById('closureModal').classList.remove('active');
+  _closurePendingRow = null;
+}
+
+function updateTotalCost() {
+  const fields = [
+    { amt: 'cl_guardFees',     cur: 'cl_guardCur' },
+    { amt: 'cl_brokerFees',    cur: 'cl_brokerCur' },
+    { amt: 'cl_transportFees', cur: 'cl_transportCur' },
+    { amt: 'cl_otherFees',     cur: 'cl_otherCur' },
+  ];
+  let egp = 0, usd = 0;
+  fields.forEach(f => {
+    const v = parseFloat(document.getElementById(f.amt).value)||0;
+    const c = document.getElementById(f.cur).value;
+    if (c === 'USD') usd += v; else egp += v;
+  });
+  const egpEl = document.getElementById('cl_totalEGP');
+  const usdEl = document.getElementById('cl_totalUSD');
+  egpEl.textContent = egp > 0 ? `ج ${egp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} EGP` : '';
+  usdEl.textContent = usd > 0 ? `$${usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} USD` : '';
+  if (!egp && !usd) { egpEl.textContent = '—'; }
+}
+
+async function confirmArchive() {
+  if (!_closurePendingRow) return;
+  const shipment = _closurePendingRow;
+  const closure = {
+    closedAt         : new Date().toISOString().slice(0,10),
+    closedBy         : '',
+    guardFees        : parseFloat(document.getElementById('cl_guardFees').value)||0,
+    guardCur         : document.getElementById('cl_guardCur').value,
+    brokerName       : document.getElementById('cl_brokerName').value.trim(),
+    brokerFees       : parseFloat(document.getElementById('cl_brokerFees').value)||0,
+    brokerCur        : document.getElementById('cl_brokerCur').value,
+    transportCompany : document.getElementById('cl_transportCompany').value.trim(),
+    transportFees    : parseFloat(document.getElementById('cl_transportFees').value)||0,
+    transportCur     : document.getElementById('cl_transportCur').value,
+    otherFees        : parseFloat(document.getElementById('cl_otherFees').value)||0,
+    otherCur         : document.getElementById('cl_otherCur').value,
+    otherFeesDesc    : document.getElementById('cl_otherFeesDesc').value.trim(),
+    closureNotes     : document.getElementById('cl_notes').value.trim(),
+  };
+  // totalCost = EGP total + USD total (stored separately as strings for Power BI)
+  const egpTotal = [
+    closure.guardCur==='EGP'?closure.guardFees:0,
+    closure.brokerCur==='EGP'?closure.brokerFees:0,
+    closure.transportCur==='EGP'?closure.transportFees:0,
+    closure.otherCur==='EGP'?closure.otherFees:0,
+  ].reduce((a,b)=>a+b,0);
+  const usdTotal = [
+    closure.guardCur==='USD'?closure.guardFees:0,
+    closure.brokerCur==='USD'?closure.brokerFees:0,
+    closure.transportCur==='USD'?closure.transportFees:0,
+    closure.otherCur==='USD'?closure.otherFees:0,
+  ].reduce((a,b)=>a+b,0);
+  closure.totalCostEGP = egpTotal;
+  closure.totalCostUSD = usdTotal;
+  closure.totalCost    = egpTotal + usdTotal; // fallback combined
+
+  closeClosureModal();
+  showSpinner();
+  try {
+    await apiArchiveCreate(shipment, closure);
+    rows = rows.filter(r => String(r.id) !== String(shipment.id));
+    archiveRows.push({ ...shipment, ...closure });
+    render();
+    renderArchive();
+    populateArchiveFilters();
+    toast('تم أرشفة الشحنة بنجاح ✓','success',4000);
+  } catch(err) {
+    toast('خطأ في الأرشفة: '+err.message,'error',5000);
+  } finally {
+    hideSpinner();
+  }
+}
+
+// F modal integration
+function fModalYes() {
+  document.getElementById('fModal').classList.remove('active');
+  if (window._fPendingRow) openClosureModal(window._fPendingRow.id);
+  window._fPendingId = null; window._fPendingRow = null;
+}
+function fModalNo() {
+  document.getElementById('fModal').classList.remove('active');
+  window._fPendingId = null; window._fPendingRow = null;
+}
+
+// ════════════════════════════════════════════════════════════
+//  ARCHIVE EDIT MODAL
+// ════════════════════════════════════════════════════════════
+function openArchEdit(id) {
+  const r = archiveRows.find(x => String(x.id) === String(id));
+  if (!r) return;
+  _archEditRow = { ...r };
+
+  document.getElementById('archEditRef').textContent = `${r.bl}${r.ref?' — '+r.ref:''} | ${r.client||''}`;
+  document.getElementById('ae_bl').value               = r.bl||'';
+  document.getElementById('ae_ref').value              = r.ref||'';
+  document.getElementById('ae_client').value           = r.client||'';
+  document.getElementById('ae_supplier').value         = r.supplier||'';
+  document.getElementById('ae_brokerName').value       = r.brokerName||'';
+  document.getElementById('ae_brokerFees').value       = r.brokerFees||'';
+  document.getElementById('ae_brokerCur').value        = r.brokerCur||'EGP';
+  document.getElementById('ae_transportCompany').value = r.transportCompany||'';
+  document.getElementById('ae_transportFees').value    = r.transportFees||'';
+  document.getElementById('ae_transportCur').value     = r.transportCur||'EGP';
+  document.getElementById('ae_guardFees').value        = r.guardFees||'';
+  document.getElementById('ae_guardCur').value         = r.guardCur||'EGP';
+  document.getElementById('ae_otherFees').value        = r.otherFees||'';
+  document.getElementById('ae_otherCur').value         = r.otherCur||'EGP';
+  document.getElementById('ae_otherFeesDesc').value    = r.otherFeesDesc||'';
+  document.getElementById('ae_notes').value            = r.closureNotes||'';
+  updateAETotal();
+
+  document.getElementById('archEditModal').classList.add('active');
+}
+
+function closeArchEdit() {
+  document.getElementById('archEditModal').classList.remove('active');
+  _archEditRow = null;
+}
+
+function updateAETotal() {
+  const fields = [
+    { amt: 'ae_guardFees',     cur: 'ae_guardCur' },
+    { amt: 'ae_brokerFees',    cur: 'ae_brokerCur' },
+    { amt: 'ae_transportFees', cur: 'ae_transportCur' },
+    { amt: 'ae_otherFees',     cur: 'ae_otherCur' },
+  ];
+  let egp = 0, usd = 0;
+  fields.forEach(f => {
+    const v = parseFloat(document.getElementById(f.amt).value)||0;
+    const c = document.getElementById(f.cur).value;
+    if (c === 'USD') usd += v; else egp += v;
+  });
+  const egpEl = document.getElementById('ae_totalEGP');
+  const usdEl = document.getElementById('ae_totalUSD');
+  egpEl.textContent = egp > 0 ? `ج ${egp.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} EGP` : '';
+  usdEl.textContent = usd > 0 ? `$${usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} USD` : '';
+  if (!egp && !usd) egpEl.textContent = '—';
+}
+
+async function saveArchEdit() {
+  if (!_archEditRow) return;
+  const updated = {
+    ..._archEditRow,
+    bl               : document.getElementById('ae_bl').value.trim(),
+    ref              : document.getElementById('ae_ref').value.trim(),
+    client           : document.getElementById('ae_client').value.trim(),
+    supplier         : document.getElementById('ae_supplier').value.trim(),
+    brokerName       : document.getElementById('ae_brokerName').value.trim(),
+    brokerFees       : parseFloat(document.getElementById('ae_brokerFees').value)||0,
+    brokerCur        : document.getElementById('ae_brokerCur').value,
+    transportCompany : document.getElementById('ae_transportCompany').value.trim(),
+    transportFees    : parseFloat(document.getElementById('ae_transportFees').value)||0,
+    transportCur     : document.getElementById('ae_transportCur').value,
+    guardFees        : parseFloat(document.getElementById('ae_guardFees').value)||0,
+    guardCur         : document.getElementById('ae_guardCur').value,
+    otherFees        : parseFloat(document.getElementById('ae_otherFees').value)||0,
+    otherCur         : document.getElementById('ae_otherCur').value,
+    otherFeesDesc    : document.getElementById('ae_otherFeesDesc').value.trim(),
+    closureNotes     : document.getElementById('ae_notes').value.trim(),
+  };
+  const egpTotal = [
+    updated.guardCur==='EGP'?updated.guardFees:0,
+    updated.brokerCur==='EGP'?updated.brokerFees:0,
+    updated.transportCur==='EGP'?updated.transportFees:0,
+    updated.otherCur==='EGP'?updated.otherFees:0,
+  ].reduce((a,b)=>a+b,0);
+  const usdTotal = [
+    updated.guardCur==='USD'?updated.guardFees:0,
+    updated.brokerCur==='USD'?updated.brokerFees:0,
+    updated.transportCur==='USD'?updated.transportFees:0,
+    updated.otherCur==='USD'?updated.otherFees:0,
+  ].reduce((a,b)=>a+b,0);
+  updated.totalCostEGP = egpTotal;
+  updated.totalCostUSD = usdTotal;
+  updated.totalCost    = egpTotal + usdTotal;
+
+  closeArchEdit();
+  showSaving();
+  try {
+    await apiArchiveUpdate(updated);
+    // Update local state
+    const idx = archiveRows.findIndex(r => String(r.id)===String(updated.id));
+    if (idx !== -1) archiveRows[idx] = updated;
+    hideSaving();
+    renderArchive();
+    populateArchiveFilters();
+    toast('تم حفظ التعديلات ✓','success');
+  } catch(err) {
+    hideSaving();
+    toast('خطأ في الحفظ: '+err.message,'error',5000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EXPORT CSV
+// ════════════════════════════════════════════════════════════
+function exportArchiveCSV() {
+  const filtered = getArchiveFiltered();
+  if (!filtered.length) { toast('لا توجد بيانات للتصدير','info'); return; }
+
+  const headers = [
+    'BL Number','Ref','بضاعة','عميل','مورد','بنك','مبلغ ($)','تاريخ الإغلاق',
+    'اسم المخلص','تكلفة المخلص ($)','شركة النقل','تكلفة النقل ($)',
+    'حراسة/غرامات ($)','مصروفات أخرى ($)','وصف المصروفات الأخرى',
+    'إجمالي التكاليف ($)','ملاحظات الإغلاق'
+  ];
+
+  const csvRows = [headers, ...filtered.map(r => [
+    r.bl, r.ref, r.goods, r.client, r.supplier, r.bank,
+    r.amount, r.closedAt,
+    r.brokerName, r.brokerFees,
+    r.transportCompany, r.transportFees,
+    r.guardFees, r.otherFees, r.otherFeesDesc,
+    r.totalCost, r.closureNotes
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`))];
+
+  const csv  = '\uFEFF' + csvRows.map(r => r.join(',')).join('\n'); // BOM for Excel Arabic
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `UPI_Archive_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('تم تصدير الملف ✓','success');
+}
+
+// ════════════════════════════════════════════════════════════
+//  ROW COLOR
+// ════════════════════════════════════════════════════════════
+async function updateRowColor(id, val) {
+  const r = rows.find(x => String(x.id)===String(id));
+  if (!r) return;
+  r.rowColor = val; render();
+  showSaving();
+  try { await apiUpdate(r); hideSaving(); toast('تم حفظ اللون ✓','success',1500); }
+  catch(err) { hideSaving(); toast('خطأ في حفظ اللون','error',3000); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  DRAG & DROP
+// ════════════════════════════════════════════════════════════
+let dragSrcId = null;
+
+function initDrag() {
+  const tbody = document.getElementById('tbody');
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const handle = tr.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', () => { tr.draggable = true; });
+    handle.addEventListener('mouseup',   () => { tr.draggable = false; });
+    tr.addEventListener('dragstart', e => { dragSrcId = tr.dataset.id; tr.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    tr.addEventListener('dragend',   () => { tr.draggable=false; tr.classList.remove('dragging'); tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over')); });
+    tr.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect='move'; tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over')); tr.classList.add('drag-over'); });
+    tr.addEventListener('drop', async e => {
+      e.preventDefault();
+      const targetId = tr.dataset.id;
+      if (!dragSrcId||dragSrcId===targetId) return;
+      const srcIdx = rows.findIndex(r=>String(r.id)===String(dragSrcId));
+      const tgtIdx = rows.findIndex(r=>String(r.id)===String(targetId));
+      if (srcIdx===-1||tgtIdx===-1) return;
+      const [moved] = rows.splice(srcIdx,1);
+      rows.splice(tgtIdx,0,moved);
+      rows.forEach((r,i)=>{ r.order=i; });
+      render();
+      showSaving();
+      try { for (const r of rows) { await apiUpdate(r); } hideSaving(); toast('تم حفظ الترتيب ✓','success'); }
+      catch(err) { hideSaving(); toast('خطأ في حفظ الترتيب','error',3000); }
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ════════════════════════════════════════════════════════════
+document.getElementById('fBank').addEventListener('change', render);
+document.getElementById('fStatus').addEventListener('change', render);
+document.getElementById('fSupplier').addEventListener('change', render);
+document.getElementById('fSearch').addEventListener('input', render);
+document.getElementById('fClearer').addEventListener('change', render);
+document.getElementById('afSupplier').addEventListener('change', renderArchive);
+document.getElementById('afBroker').addEventListener('change', renderArchive);
+document.getElementById('afTransport').addEventListener('change', renderArchive);
+document.getElementById('afSearch').addEventListener('input', renderArchive);
+
+// ════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════
+document.addEventListener('keydown', async (e) => {
+  const inInput = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
+  const alt  = e.altKey;
+  const code = e.code;
+
+  if (alt && code === 'KeyS') {
+    e.preventDefault();
+    showSaving();
+    try { for (const r of rows) { await apiUpdate(r); } hideSaving(); toast('تم حفظ كل التعديلات ✓','success'); }
+    catch(err) { hideSaving(); toast('خطأ في الحفظ: '+err.message,'error',4000); }
+    return;
+  }
+  if (code==='Escape') {
+    if (document.getElementById('closureModal').classList.contains('active')) { closeClosureModal(); return; }
+    if (document.getElementById('archEditModal').classList.contains('active')) { closeArchEdit(); return; }
+    if (editMode) { toggleEdit(); return; }
+  }
+  if (inInput) return;
+  if (alt && code==='KeyN') { e.preventDefault(); addRow(); return; }
+  if (alt && code==='KeyE') { e.preventDefault(); toggleEdit(); return; }
+  if (alt && code==='KeyR') { e.preventDefault(); loadData(true); return; }
+  if (alt && code==='KeyP') { e.preventDefault(); window.print(); return; }
+  if (alt && code==='KeyF') { e.preventDefault(); document.getElementById('fSearch').focus(); return; }
+});
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+(async () => {
+  showSpinner();
+  await loadData(false);
+  hideSpinner();
+  startAutoRefresh();
+})();
+</script>
+</body>
+</html>
